@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">SoundClound</string>
+    <string name="item_search">Search</string>
 </resources>
