@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">SoundClound</string>
+    <string name="item_search">Search</string>
+    <string name="popular">Popular</string>
+    <string name="category">Category</string>
+    <string name="local">Local</string>
 </resources>
