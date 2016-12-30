@@ -19,6 +19,7 @@ import butterknife.ButterKnife;
 
 public class AudioOnlineAdapter
     extends RecyclerView.Adapter<AudioOnlineAdapter.MyViewHolder> {
+    private static final String FORMAT_NUMBER = "%1$,.0f";
     private List<Track> mListTracks;
     private Context mContext;
     private LayoutInflater mLayoutInflater;
@@ -65,7 +66,7 @@ public class AudioOnlineAdapter
             if (track == null || track.getUser() == null) return;
             mAudioTitle.setText(track.getTitle());
             mUserName.setText(track.getUser().getUserName());
-            mPlaybackCount.setText(track.getPlaybackCount());
+            mPlaybackCount.setText(String.format(FORMAT_NUMBER, track.getPlaybackCount()));
             Picasso.with(mContext)
                 .load(track.getArtworkUrl())
                 .into(mImageAudioIcon);

@@ -24,9 +24,9 @@ public abstract class API {
             .enqueue(callback);
     }
 
-    public static void getSearchingAudio(Map<String, String> params,
+    public static void getAudioResult(Map<String, String> params,
                                          Callback<SearchAudioResult> callback) {
-        clientSoundCloud.getSearChingAudio(params)
+        clientSoundCloud.getAudioResult(params)
             .enqueue(callback);
     }
 }

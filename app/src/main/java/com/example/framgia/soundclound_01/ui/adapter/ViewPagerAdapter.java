@@ -8,8 +8,8 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
 import com.example.framgia.soundclound_01.R;
-import com.example.framgia.soundclound_01.ui.main.fragment.AudioFragment;
-import com.example.framgia.soundclound_01.ui.main.fragment.CategoryFragment;
+import com.example.framgia.soundclound_01.ui.main.audio.AudioFragment;
+import com.example.framgia.soundclound_01.ui.main.category.CategoryFragment;
 
 public class ViewPagerAdapter extends FragmentPagerAdapter {
     private static int TAB_NUMBER = 3;

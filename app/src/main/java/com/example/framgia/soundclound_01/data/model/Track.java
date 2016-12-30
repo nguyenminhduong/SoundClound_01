@@ -22,7 +22,7 @@ public class Track {
     @SerializedName("permalink_url")
     private String mPermaLinkUrl;
     @SerializedName("playback_count")
-    private int mPlaybackCount;
+    private double mPlaybackCount;
     @SerializedName("title")
     private String mTitle;
     @SerializedName("user")
@@ -100,11 +100,11 @@ public class Track {
         mPermaLinkUrl = permaLinkUrl;
     }
 
-    public int getPlaybackCount() {
+    public double getPlaybackCount() {
         return mPlaybackCount;
     }
 
-    public void setPlaybackCount(int playbackCount) {
+    public void setPlaybackCount(double playbackCount) {
         mPlaybackCount = playbackCount;
     }
 
