@@ -5,22 +5,27 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
+import android.view.MenuItem;
 
 import com.example.framgia.soundclound_01.R;
 import com.example.framgia.soundclound_01.ui.adapter.ViewPagerAdapter;
+import com.example.framgia.soundclound_01.ui.audioresult.AudioResultActivity;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity implements MainContract.View {
+public class MainActivity extends AppCompatActivity
+    implements MainContract.View, SearchView.OnQueryTextListener {
     @BindView(R.id.tab_layout_main)
     TabLayout mTabLayout;
     @BindView(R.id.toolbar_main)
     Toolbar mToolbarMain;
     @BindView(R.id.view_pager_main)
     ViewPager mViewPager;
+    private SearchView mSearchView;
     private MainContract.Presenter mMainPresenter;
 
     @Override
@@ -34,6 +39,10 @@ public class MainActivity extends AppCompatActivity implements MainContract.View
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.activity_main, menu);
+        MenuItem searchItem = menu.findItem(R.id.item_search);
+        mSearchView = (SearchView) searchItem.getActionView();
+        mSearchView.setSubmitButtonEnabled(true);
+        mSearchView.setOnQueryTextListener(this);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -52,5 +61,16 @@ public class MainActivity extends AppCompatActivity implements MainContract.View
     @Override
     public void setPresenter(MainContract.Presenter presenter) {
         mMainPresenter = presenter;
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        startActivity(AudioResultActivity.getAudioFromQuery(this, query));
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        return false;
     }
 }

@@ -9,7 +9,7 @@ import retrofit2.Callback;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-import static com.example.framgia.soundclound_01.utils.Const.APIConst.BaseURL.BASE_URL_SOUNDCLOUD;
+import static com.example.framgia.soundclound_01.utils.Const.APIConst.BASE_URL_SOUNDCLOUD;
 
 public abstract class API {
     private static final APIServices clientSoundCloud = new Retrofit.Builder()
@@ -25,7 +25,7 @@ public abstract class API {
     }
 
     public static void getAudioResult(Map<String, String> params,
-                                         Callback<SearchAudioResult> callback) {
+                                      Callback<SearchAudioResult> callback) {
         clientSoundCloud.getAudioResult(params)
             .enqueue(callback);
     }
