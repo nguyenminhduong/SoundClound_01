@@ -9,8 +9,8 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.QueryMap;
 
-import static com.example.framgia.soundclound_01.utils.Const.APIConst.Path.PATH_AUDIO;
-import static com.example.framgia.soundclound_01.utils.Const.APIConst.Path.PATH_SEARCH_AUDIO;
+import static com.example.framgia.soundclound_01.utils.Const.APIConst.PATH_AUDIO;
+import static com.example.framgia.soundclound_01.utils.Const.APIConst.PATH_SEARCH_AUDIO;
 
 public interface APIServices {
     @GET(PATH_AUDIO)

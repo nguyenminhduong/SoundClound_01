@@ -16,24 +16,26 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyViewHolder> {
+public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder> {
     private List<Category> mListCategories;
     private LayoutInflater mLayoutInflater;
+    private ClickListener mClickListener;
 
-    public CategoryAdapter(List<Category> list, Context context) {
+    public CategoryAdapter(List<Category> list, Context context, ClickListener clickListener) {
         mListCategories = list;
         mLayoutInflater = LayoutInflater.from(context);
+        mClickListener = clickListener;
     }
 
     @Override
-    public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public CategoryViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView =
             mLayoutInflater.inflate(R.layout.item_recycleview_category, parent, false);
-        return new MyViewHolder(itemView);
+        return new CategoryViewHolder(itemView);
     }
 
     @Override
-    public void onBindViewHolder(MyViewHolder holder, int position) {
+    public void onBindViewHolder(CategoryViewHolder holder, int position) {
         holder.bindData(mListCategories.get(position));
     }
 
@@ -42,21 +44,33 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyView
         return mListCategories != null ? mListCategories.size() : 0;
     }
 
-    public class MyViewHolder extends RecyclerView.ViewHolder {
+    public interface ClickListener {
+        void onItemClick(View view, int position);
+    }
+
+    public class CategoryViewHolder extends RecyclerView.ViewHolder implements
+        View.OnClickListener {
         @BindView(R.id.text_title_category)
         TextView mCategoryTitle;
         @BindView(R.id.image_category)
         ImageView mImageCategory;
 
-        public MyViewHolder(View view) {
+        public CategoryViewHolder(View view) {
             super(view);
             ButterKnife.bind(this, view);
+            view.setOnClickListener(this);
         }
 
         public void bindData(Category category) {
             if (category == null) return;
             mCategoryTitle.setText(category.getCategoryTitle());
             mImageCategory.setImageResource(category.getCategoryImage());
+        }
+
+        @Override
+        public void onClick(View view) {
+            if (mClickListener == null) return;
+            mClickListener.onItemClick(view, getAdapterPosition());
         }
     }
 }

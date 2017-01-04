@@ -26,7 +26,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-import static com.example.framgia.soundclound_01.utils.Const.APIConst.Param.VALUE_LIMIT;
+import static com.example.framgia.soundclound_01.utils.Const.APIConst.VALUE_LIMIT;
 
 public class AudioFragment extends Fragment
     implements AudioContract.View, SwipeRefreshLayout.OnRefreshListener {

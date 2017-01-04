@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import com.example.framgia.soundclound_01.R;
 import com.example.framgia.soundclound_01.data.model.Category;
 import com.example.framgia.soundclound_01.ui.adapter.CategoryAdapter;
+import com.example.framgia.soundclound_01.ui.audioresult.AudioResultActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,8 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class CategoryFragment extends Fragment implements CategoryContract.View {
+public class CategoryFragment extends Fragment
+    implements CategoryContract.View, CategoryAdapter.ClickListener {
     @BindView(R.id.recycler_view_category)
     RecyclerView mRecyclerViewCategory;
     private CategoryContract.Presenter mCategoryPresenter;
@@ -45,7 +47,7 @@ public class CategoryFragment extends Fragment implements CategoryContract.View 
 
     @Override
     public void start() {
-        mCategoryAdapter = new CategoryAdapter(mCategories, getActivity());
+        mCategoryAdapter = new CategoryAdapter(mCategories, getActivity(), this);
         mRecyclerViewCategory.setHasFixedSize(true);
         GridLayoutManager gridLayoutManager =
             new GridLayoutManager(getActivity(), getResources().getInteger(R.integer.item_col));
@@ -66,5 +68,11 @@ public class CategoryFragment extends Fragment implements CategoryContract.View 
 
     @Override
     public void showGetCategoryError() {
+    }
+
+    @Override
+    public void onItemClick(View view, int position) {
+        startActivity(AudioResultActivity.getAudioFromCategory(getActivity(), mCategories.get
+            (position)));
     }
 }
