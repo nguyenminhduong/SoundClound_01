@@ -47,6 +47,16 @@ public class Const {
         public static final String EXTRA_CATEGORY = "category";
         public static final String EXTRA_QUERY = "query";
         public static final String EXTRA_TITLE = "title";
+        public static final String BROADCAST_UPDATE_CONTROL = "com.soundclound_01.UpdateControl";
+        public static final String EXTRA_USER_NAME = "username";
+        public static final String EXTRA_IMAGE_URL = "imageurl";
+        public static final String ACTION_UPDATE_AUDIO =
+            "com.soundclound_01.action.ACTION_UPDATE_AUDIO";
+        public static final String ACTION_PAUSE_UPDATE =
+            "com.soundclound_01.action.ACTION_PAUSE_UPDATE";
+        public static final String ACTION_PLAY_UPDATE =
+            "com.soundclound_01.action.ACTION_PLAY_UPDATE";
+        public static final String ACTION_STOP_UPDATE = "com.soundclound_01.action.STOP";
     }
 
     public class APIConst {

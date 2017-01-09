@@ -9,18 +9,16 @@ public class Track {
     private String mCreatedAt;
     @SerializedName("description")
     private String mDescription;
-    @SerializedName("download_url")
-    private String mDownloadUrl;
+    @SerializedName("downloadable")
+    private boolean mDownloadable;
     @SerializedName("duration")
     private int mDuration;
     @SerializedName("full_duration")
     private int mFullDuration;
     @SerializedName("id")
     private int mId;
-    @SerializedName("permalink")
-    private String mPermaLink;
-    @SerializedName("permalink_url")
-    private String mPermaLinkUrl;
+    @SerializedName("uri")
+    private String mUri;
     @SerializedName("playback_count")
     private double mPlaybackCount;
     @SerializedName("title")
@@ -52,12 +50,12 @@ public class Track {
         mDescription = description;
     }
 
-    public String getDownloadUrl() {
-        return mDownloadUrl;
+    public boolean isDownloadable() {
+        return mDownloadable;
     }
 
-    public void setDownloadUrl(String downloadUrl) {
-        mDownloadUrl = downloadUrl;
+    public void setDownloadable(boolean downloadable) {
+        mDownloadable = downloadable;
     }
 
     public int getDuration() {
@@ -84,22 +82,6 @@ public class Track {
         mId = id;
     }
 
-    public String getPermaLink() {
-        return mPermaLink;
-    }
-
-    public void setPermaLink(String permaLink) {
-        mPermaLink = permaLink;
-    }
-
-    public String getPermaLinkUrl() {
-        return mPermaLinkUrl;
-    }
-
-    public void setPermaLinkUrl(String permaLinkUrl) {
-        mPermaLinkUrl = permaLinkUrl;
-    }
-
     public double getPlaybackCount() {
         return mPlaybackCount;
     }
@@ -122,5 +104,13 @@ public class Track {
 
     public void setUser(User user) {
         mUser = user;
+    }
+
+    public String getUri() {
+        return mUri;
+    }
+
+    public void setUri(String uri) {
+        mUri = uri;
     }
 }
