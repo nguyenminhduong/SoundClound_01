@@ -11,7 +11,6 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.session.MediaSessionManager;
 import android.os.AsyncTask;
-import android.os.Binder;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.v4.media.MediaMetadataCompat;
@@ -34,11 +33,15 @@ import java.net.URL;
 import java.util.List;
 
 import static android.media.MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK;
-import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_PAUSE_UPDATE;
-import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_PLAY_UPDATE;
-import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_STOP_UPDATE;
+import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_GET_AUDIO_STATE;
+import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_NEXT;
+import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_PAUSE;
+import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_PLAY;
+import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_PLAY_NEW_AUDIO;
+import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_PREVIOUS;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_UPDATE_AUDIO;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.BROADCAST_UPDATE_CONTROL;
+import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_ICON_PLAY_PAUSE;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_IMAGE_URL;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_TITLE;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_USER_NAME;
@@ -49,10 +52,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
     MediaPlayer.OnInfoListener, MediaPlayer.OnBufferingUpdateListener,
     AudioManager.OnAudioFocusChangeListener {
-    public static final String ACTION_PLAY = "com.soundcloud_01.action.ACTION_PLAY";
-    public static final String ACTION_PAUSE = "com.soundcloud_01.action.ACTION_PAUSE";
-    public static final String ACTION_PREVIOUS = "com.soundcloud_01.action.ACTION_PREVIOUS";
-    public static final String ACTION_NEXT = "com.soundcloud_01.action.ACTION_NEXT";
     public static final String ACTION_STOP = "com.soundcloud_01.action.ACTION_STOP";
     public static final String AUDIO_PLAYER = "AUDIO_PLAYER";
     private static final String STREAM_URI = "/stream?" + Const.APIConst
@@ -89,7 +88,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     @Override
     public IBinder onBind(Intent intent) {
-        return new LocalBinder();
+        return null;
     }
 
     @Override
@@ -181,12 +180,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public void onPrepared(MediaPlayer mp) {
         playMedia();
-        Intent broadcastIntent = new Intent(BROADCAST_UPDATE_CONTROL);
-        broadcastIntent.setAction(ACTION_UPDATE_AUDIO);
-        broadcastIntent.putExtra(EXTRA_TITLE, mTrack.getTitle());
-        broadcastIntent.putExtra(EXTRA_USER_NAME, mTrack.getUser().getUserName());
-        broadcastIntent.putExtra(EXTRA_IMAGE_URL, mTrack.getArtworkUrl());
-        getApplicationContext().sendBroadcast(broadcastIntent);
+        sendBroadCastUpdate();
     }
 
     @Override
@@ -247,13 +241,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public void playMedia() {
         if (mMediaPlayer.isPlaying()) return;
         mMediaPlayer.start();
-        Intent broadcastIntent = new Intent(BROADCAST_UPDATE_CONTROL);
-        broadcastIntent.setAction(ACTION_PLAY);
-        getApplicationContext().sendBroadcast(broadcastIntent);
+        updateMetaData();
     }
 
     public void stopMedia() {
-        if (mMediaPlayer == null || mMediaPlayer.isPlaying()) return;
+        if (mMediaPlayer == null || !mMediaPlayer.isPlaying()) return;
         mMediaPlayer.stop();
     }
 
@@ -261,18 +253,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         if (!mMediaPlayer.isPlaying()) return;
         mMediaPlayer.pause();
         mResumePosition = mMediaPlayer.getCurrentPosition();
-        Intent broadcastIntent = new Intent(BROADCAST_UPDATE_CONTROL);
-        broadcastIntent.setAction(ACTION_PAUSE_UPDATE);
-        getApplicationContext().sendBroadcast(broadcastIntent);
     }
 
     public void resumeMedia() {
         if (mMediaPlayer.isPlaying()) return;
         mMediaPlayer.seekTo(mResumePosition);
         mMediaPlayer.start();
-        Intent broadcastIntent = new Intent(BROADCAST_UPDATE_CONTROL);
-        broadcastIntent.setAction(ACTION_PLAY_UPDATE);
-        getApplicationContext().sendBroadcast(broadcastIntent);
     }
 
     public void skipToNext() {
@@ -281,6 +267,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         storeAudioIndex(getApplicationContext(), mAudioIndex);
         stopMedia();
         mMediaPlayer.reset();
+        sendBroadCastUpdate();
         initMediaPlayer();
     }
 
@@ -290,7 +277,20 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         storeAudioIndex(getApplicationContext(), mAudioIndex);
         stopMedia();
         mMediaPlayer.reset();
+        sendBroadCastUpdate();
         initMediaPlayer();
+    }
+
+    public void playNewAudio() {
+        loadAudio();
+        if (mMediaPlayer.isPlaying()) {
+            stopMedia();
+            mMediaPlayer.reset();
+        }
+        sendBroadCastUpdate();
+        initMediaPlayer();
+        updateMetaData();
+        buildNotification(PlaybackStatus.PLAYING);
     }
 
     public void seekTo(int position) {
@@ -343,8 +343,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 super.onStop();
                 stopForeground(true);
                 stopMedia();
-                removeNotification();
                 stopSelf();
+                removeNotification();
             }
 
             @Override
@@ -354,7 +354,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         });
     }
 
-    private void updateMetaData() {
+    public void updateMetaData() {
         if (mIconBitmap == null) {
             mIconBitmap = BitmapFactory.decodeResource(getResources(),
                 R.drawable.ic_audio_default);
@@ -400,7 +400,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 .addAction(notificationAction, ACTION_PAUSE, playPauseAction)
                 .addAction(android.R.drawable.ic_media_next, ACTION_NEXT,
                     playbackAction(ACTION_NEXT_NUMBER))
-                .addAction(android.R.drawable.ic_menu_delete, ACTION_STOP,
+                .addAction(android.R.drawable.ic_menu_close_clear_cancel, ACTION_STOP,
                     playbackAction(ACTION_STOP_NUMBER));
         startForeground(NOTIFICATION_ID, notificationBuilder.build());
     }
@@ -438,20 +438,44 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private void handleIncomingActions(Intent playbackAction) {
         if (playbackAction == null || playbackAction.getAction() == null) return;
         String actionString = playbackAction.getAction();
-        if (actionString.equalsIgnoreCase(ACTION_PLAY)) {
-            mTransportControls.play();
-        } else if (actionString.equalsIgnoreCase(ACTION_PAUSE)) {
-            mTransportControls.pause();
-        } else if (actionString.equalsIgnoreCase(ACTION_NEXT)) {
-            mTransportControls.skipToNext();
-        } else if (actionString.equalsIgnoreCase(ACTION_PREVIOUS)) {
-            mTransportControls.skipToPrevious();
-        } else if (actionString.equalsIgnoreCase(ACTION_STOP)) {
-            mTransportControls.stop();
-            Intent broadcastIntent = new Intent(BROADCAST_UPDATE_CONTROL);
-            broadcastIntent.setAction(ACTION_STOP_UPDATE);
-            getApplicationContext().sendBroadcast(broadcastIntent);
+        Intent broadcastIntent = new Intent(BROADCAST_UPDATE_CONTROL);
+        broadcastIntent.setAction(actionString);
+        sendBroadcast(broadcastIntent);
+        switch (actionString) {
+            case ACTION_PLAY:
+                mTransportControls.play();
+                break;
+            case ACTION_PAUSE:
+                mTransportControls.pause();
+                break;
+            case ACTION_NEXT:
+                mTransportControls.skipToNext();
+                break;
+            case ACTION_PREVIOUS:
+                mTransportControls.skipToPrevious();
+                break;
+            case ACTION_STOP:
+                mTransportControls.stop();
+                break;
+            case ACTION_PLAY_NEW_AUDIO:
+                playNewAudio();
+                break;
+            case ACTION_GET_AUDIO_STATE:
+                sendBroadCastUpdate();
+                break;
+            default:
+                break;
         }
+    }
+
+    private void sendBroadCastUpdate() {
+        Intent broadcastIntent = new Intent(BROADCAST_UPDATE_CONTROL);
+        broadcastIntent.setAction(ACTION_UPDATE_AUDIO);
+        broadcastIntent.putExtra(EXTRA_TITLE, mTrack.getTitle());
+        broadcastIntent.putExtra(EXTRA_USER_NAME, mTrack.getUser().getUserName());
+        broadcastIntent.putExtra(EXTRA_IMAGE_URL, mTrack.getArtworkUrl());
+        broadcastIntent.putExtra(EXTRA_ICON_PLAY_PAUSE, mMediaPlayer.isPlaying());
+        getApplicationContext().sendBroadcast(broadcastIntent);
     }
 
     private Bitmap getBitmapFromURL(String strUrl) {
@@ -470,12 +494,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         }
     }
 
-    public class LocalBinder extends Binder {
-        public MediaPlayerService getService() {
-            return MediaPlayerService.this;
-        }
-    }
-
     public class GetBitmapImage extends AsyncTask<String, Void, Bitmap> {
         @Override
         protected Bitmap doInBackground(String... strings) {
@@ -488,9 +506,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             if (bitmap == null) return;
             mIconBitmap = bitmap;
             updateMetaData();
-            if (mMediaPlayer.isPlaying())
-                buildNotification(PlaybackStatus.PLAYING);
-            else buildNotification(PlaybackStatus.PAUSED);
+            buildNotification(PlaybackStatus.PLAYING);
         }
     }
 }

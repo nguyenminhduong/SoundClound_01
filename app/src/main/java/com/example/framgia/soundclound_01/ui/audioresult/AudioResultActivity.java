@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,8 +17,11 @@ import android.widget.Toast;
 import com.example.framgia.soundclound_01.R;
 import com.example.framgia.soundclound_01.data.model.Category;
 import com.example.framgia.soundclound_01.data.model.Track;
+import com.example.framgia.soundclound_01.service.MediaPlayerService;
 import com.example.framgia.soundclound_01.ui.adapter.AudioOnlineAdapter;
+import com.example.framgia.soundclound_01.ui.base.BaseMediaActivity;
 import com.example.framgia.soundclound_01.utils.Const;
+import com.example.framgia.soundclound_01.utils.DatabaseHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,12 +30,15 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 import static com.example.framgia.soundclound_01.utils.Const.APIConst.VALUE_LIMIT;
+import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_PLAY_NEW_AUDIO;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_CATEGORY;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_QUERY;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_TITLE;
+import static com.example.framgia.soundclound_01.utils.StorePreferences.storeAudioIndex;
 
-public class AudioResultActivity extends AppCompatActivity
-    implements AudioResultContract.View, SwipeRefreshLayout.OnRefreshListener {
+public class AudioResultActivity extends BaseMediaActivity
+    implements AudioResultContract.View, SwipeRefreshLayout.OnRefreshListener,
+    AudioOnlineAdapter.ClickListener {
     @BindView(R.id.recycler_view_audio)
     RecyclerView mRecyclerView;
     @BindView(R.id.progress_load_more)
@@ -53,6 +58,7 @@ public class AudioResultActivity extends AppCompatActivity
     private AudioOnlineAdapter mAudioOnlineAdapter;
     private LinearLayoutManager mLinearLayoutManager;
     private List<Track> mTracks = new ArrayList<>();
+    private DatabaseHelper mDatabaseHelper;
 
     public static Intent getAudioFromCategory(Context context, Category
         category) {
@@ -74,7 +80,7 @@ public class AudioResultActivity extends AppCompatActivity
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.fragment_audio);
+        setContentView(R.layout.activity_audio_result);
         setPresenter(new AudioResultPresenter(this));
         ButterKnife.bind(this);
         mAudioResultPresenter.start();
@@ -87,15 +93,17 @@ public class AudioResultActivity extends AppCompatActivity
 
     @Override
     public void start() {
+        super.start();
         initView();
         getIntentData();
         setupActionBar();
+        mDatabaseHelper = new DatabaseHelper(this);
         mAudioResultPresenter.getAudio(mCategory, mQuery, mCanLoadMore, mOffSet);
     }
 
     private void initView() {
         mSwifeToRefresh.setOnRefreshListener(this);
-        mAudioOnlineAdapter = new AudioOnlineAdapter(mTracks, this);
+        mAudioOnlineAdapter = new AudioOnlineAdapter(mTracks, this, this);
         mRecyclerView.setHasFixedSize(true);
         mLinearLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
@@ -174,5 +182,19 @@ public class AudioResultActivity extends AppCompatActivity
                     }
                 }
             });
+    }
+
+    private void playAudio(int audioIndex) {
+        mDatabaseHelper.clearListAudio();
+        mDatabaseHelper.addListAudio(mTracks);
+        storeAudioIndex(getApplicationContext(), audioIndex);
+        Intent intent = new Intent(getApplicationContext(), MediaPlayerService.class);
+        intent.setAction(ACTION_PLAY_NEW_AUDIO);
+        startService(intent);
+    }
+
+    @Override
+    public void setOnClickListener(int index) {
+        playAudio(index);
     }
 }

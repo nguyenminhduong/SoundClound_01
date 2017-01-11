@@ -50,13 +50,17 @@ public class Const {
         public static final String BROADCAST_UPDATE_CONTROL = "com.soundclound_01.UpdateControl";
         public static final String EXTRA_USER_NAME = "username";
         public static final String EXTRA_IMAGE_URL = "imageurl";
+        public static final String EXTRA_ICON_PLAY_PAUSE = "EXTRA_ICON_PLAY_PAUSE";
         public static final String ACTION_UPDATE_AUDIO =
             "com.soundclound_01.action.ACTION_UPDATE_AUDIO";
-        public static final String ACTION_PAUSE_UPDATE =
-            "com.soundclound_01.action.ACTION_PAUSE_UPDATE";
-        public static final String ACTION_PLAY_UPDATE =
-            "com.soundclound_01.action.ACTION_PLAY_UPDATE";
-        public static final String ACTION_STOP_UPDATE = "com.soundclound_01.action.STOP";
+        public static final String ACTION_PLAY = "com.soundcloud_01.action.ACTION_PLAY";
+        public static final String ACTION_PAUSE = "com.soundcloud_01.action.ACTION_PAUSE";
+        public static final String ACTION_PREVIOUS = "com.soundcloud_01.action.ACTION_PREVIOUS";
+        public static final String ACTION_NEXT = "com.soundcloud_01.action.ACTION_NEXT";
+        public static final String ACTION_GET_AUDIO_STATE = "com.soundcloud_01.action" +
+            ".ACTION_AUDIO_SATTE";
+        public static final String ACTION_PLAY_NEW_AUDIO = "com.soundcloud_01.action" +
+            ".ACTION_PLAY_NEW_AUDIO";
     }
 
     public class APIConst {
