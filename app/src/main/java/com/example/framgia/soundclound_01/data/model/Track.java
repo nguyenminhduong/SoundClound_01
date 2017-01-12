@@ -2,6 +2,8 @@ package com.example.framgia.soundclound_01.data.model;
 
 import com.google.gson.annotations.SerializedName;
 
+import static com.example.framgia.soundclound_01.utils.Const.APIConst.STREAM_URL;
+
 public class Track {
     @SerializedName("artwork_url")
     private String mArtworkUrl;
@@ -112,5 +114,9 @@ public class Track {
 
     public void setUri(String uri) {
         mUri = uri;
+    }
+
+    public String getFullUri() {
+        return getUri() + STREAM_URL;
     }
 }

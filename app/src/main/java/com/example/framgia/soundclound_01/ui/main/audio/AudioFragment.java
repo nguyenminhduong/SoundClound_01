@@ -92,10 +92,10 @@ public class AudioFragment extends Fragment
     public void showAudio(AudioResult audioResult) {
         if (audioResult == null || audioResult.getTracks() == null) return;
         if (audioResult.getNextHref() == null) mCanLoadMore = false;
-        mOffSet += Integer.parseInt(VALUE_LIMIT);
-        for (CollectionTrack collectionTrack : audioResult.getTracks()) {
+        if (mOffSet == 0) mTracks.clear();
+        for (CollectionTrack collectionTrack : audioResult.getTracks())
             mTracks.add(collectionTrack.getTrack());
-        }
+        mOffSet += Integer.parseInt(VALUE_LIMIT);
         mAudioOnlineAdapter.notifyDataSetChanged();
     }
 
@@ -156,7 +156,6 @@ public class AudioFragment extends Fragment
     public void onRefresh() {
         mOffSet = 0;
         mCanLoadMore = true;
-        mTracks.clear();
         mSwifeToRefresh.setRefreshing(false);
         mAudioPresenter.getAudio(mOffSet, mCanLoadMore);
     }

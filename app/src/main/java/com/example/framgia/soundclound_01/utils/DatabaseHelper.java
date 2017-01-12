@@ -69,7 +69,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 values.put(COLUMN_TRACK_ARTWORK_URL, track.getArtworkUrl());
                 values.put(COLUMN_TRACK_DOWNLOADABLE, track.isDownloadable() ? TRUE : FALSE);
                 values.put(COLUMN_TRACK_DURATION, track.getFullDuration());
-                values.put(COLUMN_TRACK_URI, track.getUri());
+                values.put(COLUMN_TRACK_URI, track.getFullUri());
                 values.put(COLUMN_TRACK_PLAYBACK_COUNT, track.getPlaybackCount());
                 values.put(COLUMN_TRACK_USER, track.getUser().getUserName());
                 db.insert(TABLE_TRACK, null, values);
@@ -107,6 +107,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             db.close();
         }
         return list;
+    }
+
+    public void addListAudioOffline(List<Track> list) {
+        if (list == null) return;
+        SQLiteDatabase db = this.getWritableDatabase();
+        try {
+            for (Track track : list) {
+                ContentValues values = new ContentValues();
+                values.put(COLUMN_TRACK_TITLE, track.getTitle());
+                values.put(COLUMN_TRACK_DURATION, track.getFullDuration());
+                values.put(COLUMN_TRACK_URI, track.getUri());
+                db.insert(TABLE_TRACK, null, values);
+            }
+        } catch (Exception ex) {
+        } finally {
+            db.close();
+        }
     }
 
     public void clearListAudio() {
