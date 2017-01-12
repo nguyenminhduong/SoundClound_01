@@ -1,5 +1,6 @@
 package com.example.framgia.soundclound_01.ui.main.offline;
 
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -16,6 +17,7 @@ import android.widget.Toast;
 
 import com.example.framgia.soundclound_01.R;
 import com.example.framgia.soundclound_01.data.model.Track;
+import com.example.framgia.soundclound_01.service.MediaPlayerService;
 import com.example.framgia.soundclound_01.ui.adapter.AudioOfflineAdapter;
 import com.example.framgia.soundclound_01.utils.DatabaseHelper;
 
@@ -26,7 +28,9 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_PLAY_NEW_AUDIO;
 import static com.example.framgia.soundclound_01.utils.Const.RequestCode.PERMISSION_REQUEST_CODE_WRITE_EXTERNAL_STORAGE;
+import static com.example.framgia.soundclound_01.utils.StorePreferences.storeAudioIndex;
 
 public class AudioOfflineFragment extends Fragment
     implements AudioOfflineContract.View, SwipeRefreshLayout.OnRefreshListener,
@@ -89,7 +93,16 @@ public class AudioOfflineFragment extends Fragment
 
     @Override
     public void setOnClickListener(int index) {
-        //play audio
+        playAudio(index);
+    }
+
+    private void playAudio(int audioIndex) {
+        mDatabaseHelper.clearListAudio();
+        mDatabaseHelper.addListAudioOffline(mTracks);
+        storeAudioIndex(getActivity(), audioIndex);
+        Intent intent = new Intent(getActivity(), MediaPlayerService.class);
+        intent.setAction(ACTION_PLAY_NEW_AUDIO);
+        getActivity().startService(intent);
     }
 
     @Override

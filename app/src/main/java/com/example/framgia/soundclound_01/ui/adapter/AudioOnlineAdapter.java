@@ -18,8 +18,6 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-import static com.example.framgia.soundclound_01.utils.Const.APIConst.STREAM_URL;
-
 public class AudioOnlineAdapter
     extends RecyclerView.Adapter<AudioOnlineAdapter.MyViewHolder> {
     private static final String FORMAT_NUMBER = "%1$,.0f";
@@ -89,7 +87,7 @@ public class AudioOnlineAdapter
                     if (mClickListener == null) return;
                     mClickListener.setOnDownloadListener
                         (mListTracks.get(getAdapterPosition()).getTitle(), mListTracks.get
-                            (getAdapterPosition()).getUri() + STREAM_URL);
+                            (getAdapterPosition()).getFullUri());
                 }
             });
         }

@@ -44,6 +44,8 @@ public class AudioOfflinePresenter implements AudioOfflineContract.Presenter {
             track.setTitle(
                 cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)));
             track.setUri(cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA)));
+            track.setFullDuration(
+                cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)));
             list.add(track);
         }
         mAudioOfflineView.showAudio(list);

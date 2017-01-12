@@ -230,7 +230,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         mMediaPlayer.reset();
         mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         try {
-            mMediaPlayer.setDataSource(mTrack.getUri() + STREAM_URI);
+            mMediaPlayer.setDataSource(mTrack.getUri());
         } catch (IOException e) {
             e.printStackTrace();
             stopSelf();

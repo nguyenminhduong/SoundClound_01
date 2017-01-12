@@ -26,6 +26,7 @@ public class MainActivity extends BaseMediaActivity
     ViewPager mViewPager;
     private SearchView mSearchView;
     private MainContract.Presenter mMainPresenter;
+    private int mViewPagerOffscreenPageLimit = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +53,7 @@ public class MainActivity extends BaseMediaActivity
         setSupportActionBar(mToolbarMain);
         FragmentManager manager = getSupportFragmentManager();
         ViewPagerAdapter adapter = new ViewPagerAdapter(manager, this);
+        mViewPager.setOffscreenPageLimit(mViewPagerOffscreenPageLimit);
         mViewPager.setAdapter(adapter);
         adapter.notifyDataSetChanged();
         mTabLayout.setupWithViewPager(mViewPager);
