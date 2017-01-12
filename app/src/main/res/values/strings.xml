@@ -5,4 +5,5 @@
     <string name="category">Category</string>
     <string name="local">Local</string>
     <string name="get_audio_error">Can not load audio, please try again</string>
+    <string name="permission_Denied"> "Permission Denied, Please allow to proceed !"</string>
 </resources>

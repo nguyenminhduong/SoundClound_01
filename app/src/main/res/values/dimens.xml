@@ -12,4 +12,5 @@
     <integer name="item_col">3</integer>
     <dimen name="dp_8">8dp</dimen>
     <dimen name="dp_64">64dp</dimen>
+    <dimen name="dp_20">20dp</dimen>
 </resources>

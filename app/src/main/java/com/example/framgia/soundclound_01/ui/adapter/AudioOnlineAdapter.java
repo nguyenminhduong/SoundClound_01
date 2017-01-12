@@ -5,6 +5,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -16,6 +17,8 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+
+import static com.example.framgia.soundclound_01.utils.Const.APIConst.STREAM_URL;
 
 public class AudioOnlineAdapter
     extends RecyclerView.Adapter<AudioOnlineAdapter.MyViewHolder> {
@@ -51,6 +54,7 @@ public class AudioOnlineAdapter
 
     public interface ClickListener {
         void setOnClickListener(int index);
+        void setOnDownloadListener(String title, String url);
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -62,6 +66,8 @@ public class AudioOnlineAdapter
         TextView mPlaybackCount;
         @BindView(R.id.image_audio_icon)
         ImageView mImageAudioIcon;
+        @BindView(R.id.button_download)
+        ImageButton mButtonDownload;
 
         public MyViewHolder(View view) {
             super(view);
@@ -77,6 +83,15 @@ public class AudioOnlineAdapter
             Picasso.with(mContext)
                 .load(track.getArtworkUrl())
                 .into(mImageAudioIcon);
+            mButtonDownload.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (mClickListener == null) return;
+                    mClickListener.setOnDownloadListener
+                        (mListTracks.get(getAdapterPosition()).getTitle(), mListTracks.get
+                            (getAdapterPosition()).getUri() + STREAM_URL);
+                }
+            });
         }
 
         @Override

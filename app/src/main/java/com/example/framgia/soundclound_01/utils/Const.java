@@ -1,5 +1,6 @@
 package com.example.framgia.soundclound_01.utils;
 
+import com.example.framgia.soundclound_01.BuildConfig;
 import com.example.framgia.soundclound_01.R;
 
 public class Const {
@@ -76,5 +77,12 @@ public class Const {
         public static final String VALUE_GENRE_POPULAR = "soundcloud:genres:all-music";
         public static final String VALUE_KIND_TOP = "top";
         public static final String VALUE_LIMIT = "20";
+        public static final String STREAM_URL = "/stream?" +
+            Const.APIConst
+                .PARAM_CLIENT_ID + "=" + BuildConfig.API_KEY;
+    }
+
+    public class RequestCode {
+        public static final int PERMISSION_REQUEST_CODE_WRITE_EXTERNAL_STORAGE = 1;
     }
 }
