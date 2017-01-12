@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -13,11 +12,11 @@ import android.view.MenuItem;
 import com.example.framgia.soundclound_01.R;
 import com.example.framgia.soundclound_01.ui.adapter.ViewPagerAdapter;
 import com.example.framgia.soundclound_01.ui.audioresult.AudioResultActivity;
+import com.example.framgia.soundclound_01.ui.base.BaseMediaActivity;
 
 import butterknife.BindView;
-import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends BaseMediaActivity
     implements MainContract.View, SearchView.OnQueryTextListener {
     @BindView(R.id.tab_layout_main)
     TabLayout mTabLayout;
@@ -48,7 +47,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void start() {
-        ButterKnife.bind(this);
+        super.start();
         mToolbarMain.setTitle(R.string.app_name);
         setSupportActionBar(mToolbarMain);
         FragmentManager manager = getSupportFragmentManager();

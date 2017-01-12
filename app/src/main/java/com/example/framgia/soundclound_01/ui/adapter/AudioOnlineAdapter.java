@@ -23,11 +23,13 @@ public class AudioOnlineAdapter
     private List<Track> mListTracks;
     private Context mContext;
     private LayoutInflater mLayoutInflater;
+    private ClickListener mClickListener;
 
-    public AudioOnlineAdapter(List<Track> list, Context context) {
+    public AudioOnlineAdapter(List<Track> list, Context context, ClickListener clickListener) {
         mListTracks = list;
         mContext = context;
         mLayoutInflater = LayoutInflater.from(context);
+        mClickListener = clickListener;
     }
 
     @Override
@@ -47,7 +49,11 @@ public class AudioOnlineAdapter
         return mListTracks != null ? mListTracks.size() : 0;
     }
 
-    public class MyViewHolder extends RecyclerView.ViewHolder {
+    public interface ClickListener {
+        void setOnClickListener(int index);
+    }
+
+    public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         @BindView(R.id.text_audio_title)
         TextView mAudioTitle;
         @BindView(R.id.text_user_name)
@@ -60,6 +66,7 @@ public class AudioOnlineAdapter
         public MyViewHolder(View view) {
             super(view);
             ButterKnife.bind(this, view);
+            view.setOnClickListener(this);
         }
 
         public void bindData(Track track) {
@@ -70,6 +77,12 @@ public class AudioOnlineAdapter
             Picasso.with(mContext)
                 .load(track.getArtworkUrl())
                 .into(mImageAudioIcon);
+        }
+
+        @Override
+        public void onClick(View view) {
+            if (mClickListener == null) return;
+            mClickListener.setOnClickListener(getAdapterPosition());
         }
     }
 }

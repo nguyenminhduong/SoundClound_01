@@ -10,4 +10,6 @@
     <dimen name="sp_15">15sp</dimen>
     <dimen name="sp_13">13sp</dimen>
     <integer name="item_col">3</integer>
+    <dimen name="dp_8">8dp</dimen>
+    <dimen name="dp_64">64dp</dimen>
 </resources>

@@ -1,5 +1,6 @@
 package com.example.framgia.soundclound_01.ui.main.audio;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -18,7 +19,9 @@ import com.example.framgia.soundclound_01.R;
 import com.example.framgia.soundclound_01.data.model.AudioResult;
 import com.example.framgia.soundclound_01.data.model.CollectionTrack;
 import com.example.framgia.soundclound_01.data.model.Track;
+import com.example.framgia.soundclound_01.service.MediaPlayerService;
 import com.example.framgia.soundclound_01.ui.adapter.AudioOnlineAdapter;
+import com.example.framgia.soundclound_01.utils.DatabaseHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,9 +30,12 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 import static com.example.framgia.soundclound_01.utils.Const.APIConst.VALUE_LIMIT;
+import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_PLAY_NEW_AUDIO;
+import static com.example.framgia.soundclound_01.utils.StorePreferences.storeAudioIndex;
 
 public class AudioFragment extends Fragment
-    implements AudioContract.View, SwipeRefreshLayout.OnRefreshListener {
+    implements AudioContract.View, SwipeRefreshLayout.OnRefreshListener,
+    AudioOnlineAdapter.ClickListener {
     @BindView(R.id.recycler_view_audio)
     RecyclerView mRecyclerView;
     @BindView(R.id.progress_load_more)
@@ -46,6 +52,7 @@ public class AudioFragment extends Fragment
     private AudioOnlineAdapter mAudioOnlineAdapter;
     private LinearLayoutManager mLinearLayoutManager;
     private List<Track> mTracks = new ArrayList<>();
+    private DatabaseHelper mDatabaseHelper;
 
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
@@ -65,12 +72,13 @@ public class AudioFragment extends Fragment
     @Override
     public void start() {
         mSwifeToRefresh.setOnRefreshListener(this);
-        mAudioOnlineAdapter = new AudioOnlineAdapter(mTracks, getActivity());
+        mAudioOnlineAdapter = new AudioOnlineAdapter(mTracks, getActivity(), this);
         mRecyclerView.setHasFixedSize(true);
         mLinearLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mRecyclerView.setAdapter(mAudioOnlineAdapter);
+        mDatabaseHelper = new DatabaseHelper(getActivity());
         implementScrollListener();
     }
 
@@ -129,6 +137,15 @@ public class AudioFragment extends Fragment
             });
     }
 
+    private void playAudio(int audioIndex) {
+        mDatabaseHelper.clearListAudio();
+        mDatabaseHelper.addListAudio(mTracks);
+        storeAudioIndex(getActivity(), audioIndex);
+        Intent intent = new Intent(getActivity(), MediaPlayerService.class);
+        intent.setAction(ACTION_PLAY_NEW_AUDIO);
+        getActivity().startService(intent);
+    }
+
     @Override
     public void onRefresh() {
         mOffSet = 0;
@@ -136,5 +153,10 @@ public class AudioFragment extends Fragment
         mTracks.clear();
         mSwifeToRefresh.setRefreshing(false);
         mAudioPresenter.getAudio(mOffSet, mCanLoadMore);
+    }
+
+    @Override
+    public void setOnClickListener(int index) {
+        playAudio(index);
     }
 }
