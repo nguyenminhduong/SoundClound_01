@@ -10,6 +10,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import com.example.framgia.soundclound_01.R;
 import com.example.framgia.soundclound_01.ui.main.audio.AudioFragment;
 import com.example.framgia.soundclound_01.ui.main.category.CategoryFragment;
+import com.example.framgia.soundclound_01.ui.main.offline.AudioOfflineFragment;
 
 public class ViewPagerAdapter extends FragmentPagerAdapter {
     private static int TAB_NUMBER = 3;
@@ -28,7 +29,7 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
             case 1:
                 return new CategoryFragment();
             case 2:
-                return new AudioFragment();
+                return new AudioOfflineFragment();
             default:
                 return null;
         }

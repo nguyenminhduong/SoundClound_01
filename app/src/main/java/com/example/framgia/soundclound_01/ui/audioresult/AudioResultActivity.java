@@ -1,9 +1,13 @@
 package com.example.framgia.soundclound_01.ui.audioresult;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -17,6 +21,7 @@ import android.widget.Toast;
 import com.example.framgia.soundclound_01.R;
 import com.example.framgia.soundclound_01.data.model.Category;
 import com.example.framgia.soundclound_01.data.model.Track;
+import com.example.framgia.soundclound_01.service.DownloadMedia;
 import com.example.framgia.soundclound_01.service.MediaPlayerService;
 import com.example.framgia.soundclound_01.ui.adapter.AudioOnlineAdapter;
 import com.example.framgia.soundclound_01.ui.base.BaseMediaActivity;
@@ -34,6 +39,7 @@ import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_PL
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_CATEGORY;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_QUERY;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_TITLE;
+import static com.example.framgia.soundclound_01.utils.Const.RequestCode.PERMISSION_REQUEST_CODE_WRITE_EXTERNAL_STORAGE;
 import static com.example.framgia.soundclound_01.utils.StorePreferences.storeAudioIndex;
 
 public class AudioResultActivity extends BaseMediaActivity
@@ -59,6 +65,7 @@ public class AudioResultActivity extends BaseMediaActivity
     private LinearLayoutManager mLinearLayoutManager;
     private List<Track> mTracks = new ArrayList<>();
     private DatabaseHelper mDatabaseHelper;
+    private DownloadMedia mDownloadMedia;
 
     public static Intent getAudioFromCategory(Context context, Category
         category) {
@@ -196,5 +203,30 @@ public class AudioResultActivity extends BaseMediaActivity
     @Override
     public void setOnClickListener(int index) {
         playAudio(index);
+    }
+
+    @Override
+    public void setOnDownloadListener(String title, String url) {
+        mDownloadMedia = new DownloadMedia(this, title, url);
+        checkDownload();
+    }
+
+    public void onRequestPermissionsResult(int requestCode, String permissions[],
+                                           int[] grantResults) {
+        if (requestCode != PERMISSION_REQUEST_CODE_WRITE_EXTERNAL_STORAGE) return;
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (mDownloadMedia == null) return;
+            mDownloadMedia.startDownload();
+        } else Toast.makeText(this, R.string.permission_Denied,
+            Toast.LENGTH_LONG).show();
+    }
+
+    private void checkDownload() {
+        int result = ContextCompat.checkSelfPermission(this,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (result == PackageManager.PERMISSION_GRANTED)
+            mDownloadMedia.startDownload();
+        else ActivityCompat.requestPermissions(this, new String[]{Manifest.permission
+            .WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE_WRITE_EXTERNAL_STORAGE);
     }
 }

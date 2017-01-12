@@ -1,9 +1,12 @@
 package com.example.framgia.soundclound_01.ui.main.audio;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -19,6 +22,7 @@ import com.example.framgia.soundclound_01.R;
 import com.example.framgia.soundclound_01.data.model.AudioResult;
 import com.example.framgia.soundclound_01.data.model.CollectionTrack;
 import com.example.framgia.soundclound_01.data.model.Track;
+import com.example.framgia.soundclound_01.service.DownloadMedia;
 import com.example.framgia.soundclound_01.service.MediaPlayerService;
 import com.example.framgia.soundclound_01.ui.adapter.AudioOnlineAdapter;
 import com.example.framgia.soundclound_01.utils.DatabaseHelper;
@@ -31,6 +35,7 @@ import butterknife.ButterKnife;
 
 import static com.example.framgia.soundclound_01.utils.Const.APIConst.VALUE_LIMIT;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_PLAY_NEW_AUDIO;
+import static com.example.framgia.soundclound_01.utils.Const.RequestCode.PERMISSION_REQUEST_CODE_WRITE_EXTERNAL_STORAGE;
 import static com.example.framgia.soundclound_01.utils.StorePreferences.storeAudioIndex;
 
 public class AudioFragment extends Fragment
@@ -53,6 +58,7 @@ public class AudioFragment extends Fragment
     private LinearLayoutManager mLinearLayoutManager;
     private List<Track> mTracks = new ArrayList<>();
     private DatabaseHelper mDatabaseHelper;
+    private DownloadMedia mDownloadMedia;
 
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
@@ -158,5 +164,31 @@ public class AudioFragment extends Fragment
     @Override
     public void setOnClickListener(int index) {
         playAudio(index);
+    }
+
+    @Override
+    public void setOnDownloadListener(String title, String url) {
+        mDownloadMedia = new DownloadMedia(getActivity(), title, url);
+        checkDownload();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[],
+                                           int[] grantResults) {
+        if (requestCode != PERMISSION_REQUEST_CODE_WRITE_EXTERNAL_STORAGE) return;
+        if (grantResults.length > 0 &&
+            grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (mDownloadMedia == null) return;
+            mDownloadMedia.startDownload();
+        } else Toast.makeText(getActivity(), R.string.permission_Denied,
+            Toast.LENGTH_LONG).show();
+    }
+
+    private void checkDownload() {
+        int result = ContextCompat.checkSelfPermission(getActivity(),
+            Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (result == PackageManager.PERMISSION_GRANTED) mDownloadMedia.startDownload();
+        else requestPermissions(new String[]{Manifest.permission
+            .WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE_WRITE_EXTERNAL_STORAGE);
     }
 }
