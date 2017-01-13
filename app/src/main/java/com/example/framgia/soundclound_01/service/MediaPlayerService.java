@@ -84,6 +84,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private Track mTrack;
     private DatabaseHelper mDatabaseHelper;
     private Bitmap mIconBitmap;
+    private boolean mCanPausePlay;
     private Runnable mUpdateTimeTask = new Runnable() {
         public void run() {
             try {
@@ -251,6 +252,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public void initMediaPlayer() {
         if (mMediaPlayer == null)
             mMediaPlayer = new MediaPlayer();
+        mCanPausePlay = false;
         mIconBitmap = null;
         mMediaPlayer.setOnCompletionListener(this);
         mMediaPlayer.setOnErrorListener(this);
@@ -273,6 +275,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         mMediaPlayer.start();
         updateMetaData();
         updateSeekBar();
+        mCanPausePlay = true;
     }
 
     public void stopMedia() {
@@ -479,9 +482,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         sendBroadcast(broadcastIntent);
         switch (actionString) {
             case ACTION_PLAY:
+                if (!mCanPausePlay) return;
                 mTransportControls.play();
                 break;
             case ACTION_PAUSE:
+                if (!mCanPausePlay) return;
                 mTransportControls.pause();
                 break;
             case ACTION_NEXT:
