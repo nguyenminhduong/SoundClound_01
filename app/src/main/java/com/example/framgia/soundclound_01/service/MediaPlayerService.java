@@ -11,6 +11,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.session.MediaSessionManager;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.v4.media.MediaMetadataCompat;
@@ -39,8 +40,12 @@ import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_PA
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_PLAY;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_PLAY_NEW_AUDIO;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_PREVIOUS;
+import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_SEEK_TO;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_UPDATE_AUDIO;
+import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_UPDATE_SEEK_BAR;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.BROADCAST_UPDATE_CONTROL;
+import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_DURATION;
+import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_FULL_DURATION;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_ICON_PLAY_PAUSE;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_IMAGE_URL;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_TITLE;
@@ -66,6 +71,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private static final int ACTION_PREVIOUS_NUMBER = 3;
     private static final int ACTION_STOP_NUMBER = 4;
     private static final int NOTIFICATION_ID = 101;
+    private final int SEEKBAR_DELAY_TIME = 1000;
+    private Handler mSeekBarHandler = new Handler();
     private MediaPlayer mMediaPlayer;
     private MediaSessionManager mMediaSessionManager;
     private MediaSessionCompat mMediaSession;
@@ -77,6 +84,29 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private Track mTrack;
     private DatabaseHelper mDatabaseHelper;
     private Bitmap mIconBitmap;
+    private Runnable mUpdateTimeTask = new Runnable() {
+        public void run() {
+            try {
+                if (mMediaPlayer.isPlaying()) {
+                    Intent broadcastIntent = new Intent(BROADCAST_UPDATE_CONTROL);
+                    broadcastIntent.setAction(ACTION_UPDATE_SEEK_BAR);
+                    broadcastIntent.putExtra(EXTRA_FULL_DURATION, mMediaPlayer.getDuration());
+                    broadcastIntent.putExtra(EXTRA_DURATION, mMediaPlayer.getCurrentPosition());
+                    getApplicationContext().sendBroadcast(broadcastIntent);
+                }
+                mSeekBarHandler.postDelayed(this, SEEKBAR_DELAY_TIME);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
+    public void updateSeekBar() {
+        try {
+            mSeekBarHandler.postDelayed(mUpdateTimeTask, SEEKBAR_DELAY_TIME);
+        } catch (Exception e) {
+        }
+    }
 
     public void loadAudio() {
         mListTrack = mDatabaseHelper.getListAudio();
@@ -180,7 +210,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public void onPrepared(MediaPlayer mp) {
         playMedia();
-        sendBroadCastUpdate();
+        sendBroadcastUpdate();
     }
 
     @Override
@@ -242,6 +272,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         if (mMediaPlayer.isPlaying()) return;
         mMediaPlayer.start();
         updateMetaData();
+        updateSeekBar();
     }
 
     public void stopMedia() {
@@ -253,12 +284,15 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         if (!mMediaPlayer.isPlaying()) return;
         mMediaPlayer.pause();
         mResumePosition = mMediaPlayer.getCurrentPosition();
+        mSeekBarHandler.removeCallbacks(mUpdateTimeTask);
+        sendBroadcastUpdate();
     }
 
     public void resumeMedia() {
         if (mMediaPlayer.isPlaying()) return;
         mMediaPlayer.seekTo(mResumePosition);
         mMediaPlayer.start();
+        updateSeekBar();
     }
 
     public void skipToNext() {
@@ -267,7 +301,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         storeAudioIndex(getApplicationContext(), mAudioIndex);
         stopMedia();
         mMediaPlayer.reset();
-        sendBroadCastUpdate();
+        sendBroadcastUpdate();
         initMediaPlayer();
     }
 
@@ -277,7 +311,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         storeAudioIndex(getApplicationContext(), mAudioIndex);
         stopMedia();
         mMediaPlayer.reset();
-        sendBroadCastUpdate();
+        sendBroadcastUpdate();
         initMediaPlayer();
     }
 
@@ -287,15 +321,18 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             stopMedia();
             mMediaPlayer.reset();
         }
-        sendBroadCastUpdate();
+        sendBroadcastUpdate();
         initMediaPlayer();
         updateMetaData();
         buildNotification(PlaybackStatus.PLAYING);
     }
 
     public void seekTo(int position) {
-        if (!mMediaPlayer.isPlaying()) return;
         mMediaPlayer.seekTo(position);
+        if (mMediaPlayer.isPlaying()) return;
+        mMediaPlayer.start();
+        sendBroadcastUpdate();
+        updateSeekBar();
     }
 
     private void initMediaSession() throws RemoteException {
@@ -342,8 +379,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             public void onStop() {
                 super.onStop();
                 stopForeground(true);
-                stopMedia();
-                stopSelf();
+                pauseMedia();
                 removeNotification();
             }
 
@@ -461,20 +497,25 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 playNewAudio();
                 break;
             case ACTION_GET_AUDIO_STATE:
-                sendBroadCastUpdate();
+                sendBroadcastUpdate();
                 break;
+            case ACTION_SEEK_TO:
+                int duration = playbackAction.getExtras().getInt(EXTRA_DURATION);
+                seekTo(duration);
             default:
                 break;
         }
     }
 
-    private void sendBroadCastUpdate() {
+    private void sendBroadcastUpdate() {
         Intent broadcastIntent = new Intent(BROADCAST_UPDATE_CONTROL);
         broadcastIntent.setAction(ACTION_UPDATE_AUDIO);
         broadcastIntent.putExtra(EXTRA_TITLE, mTrack.getTitle());
         broadcastIntent.putExtra(EXTRA_USER_NAME, mTrack.getUser().getUserName());
         broadcastIntent.putExtra(EXTRA_IMAGE_URL, mTrack.getArtworkUrl());
         broadcastIntent.putExtra(EXTRA_ICON_PLAY_PAUSE, mMediaPlayer.isPlaying());
+        broadcastIntent.putExtra(EXTRA_DURATION, mMediaPlayer.getCurrentPosition());
+        broadcastIntent.putExtra(EXTRA_FULL_DURATION, mMediaPlayer.getDuration());
         getApplicationContext().sendBroadcast(broadcastIntent);
     }
 

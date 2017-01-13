@@ -1,21 +1,20 @@
-package com.example.framgia.soundclound_01.ui.base;
+package com.example.framgia.soundclound_01.ui.fullplayer;
 
-import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.example.framgia.soundclound_01.R;
 import com.example.framgia.soundclound_01.service.MediaPlayerService;
-import com.example.framgia.soundclound_01.ui.fullplayer.FullPlayerActivity;
 import com.squareup.picasso.Picasso;
 
 import butterknife.BindView;
@@ -27,17 +26,21 @@ import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_NE
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_PAUSE;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_PLAY;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_PREVIOUS;
+import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_SEEK_TO;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_UPDATE_AUDIO;
+import static com.example.framgia.soundclound_01.utils.Const.IntentKey.ACTION_UPDATE_SEEK_BAR;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.BROADCAST_UPDATE_CONTROL;
+import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_DURATION;
+import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_FULL_DURATION;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_ICON_PLAY_PAUSE;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_IMAGE_URL;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_TITLE;
 import static com.example.framgia.soundclound_01.utils.Const.IntentKey.EXTRA_USER_NAME;
 
-public abstract class BaseMediaActivity extends AppCompatActivity implements BaseMediaContract.View,
-    View.OnClickListener {
+public class FullPlayerActivity extends AppCompatActivity
+    implements FullPlayerContract.View, View.OnClickListener, SeekBar.OnSeekBarChangeListener {
     @Nullable
-    @BindView(R.id.album_art)
+    @BindView(R.id.image_album_art)
     ImageView mImageArt;
     @Nullable
     @BindView(R.id.text_title)
@@ -54,14 +57,19 @@ public abstract class BaseMediaActivity extends AppCompatActivity implements Bas
     @Nullable
     @BindView(R.id.image_play_next)
     ImageButton mPlayNext;
-    @Nullable
-    @BindView(R.id.controls_container)
-    RelativeLayout mRelativeControl;
+    @BindView(R.id.seek_bar_audio)
+    SeekBar mSeekBarAudio;
+    @BindView(R.id.text_duration)
+    TextView mAudioDuration;
+    @BindView(R.id.text_full_duration)
+    TextView mAudioFullDuration;
+    private FullPlayerContract.Presenter mFullPlayerPresenter;
     private String mAudioTitle;
     private String mUserName;
     private String mImageUrl;
+    private int mFullDuration;
+    private int mDuration;
     private boolean mIsPlay;
-    private BaseMediaContract.Presenter mBaseMediaPresenter;
     private BroadcastReceiver mUpdateControl = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -75,6 +83,9 @@ public abstract class BaseMediaActivity extends AppCompatActivity implements Bas
                 case ACTION_UPDATE_AUDIO:
                     loadAudioInfor(intent);
                     break;
+                case ACTION_UPDATE_SEEK_BAR:
+                    loadSeekBarInfor(intent);
+                    break;
                 default:
                     break;
             }
@@ -82,32 +93,28 @@ public abstract class BaseMediaActivity extends AppCompatActivity implements Bas
     };
 
     @Override
-    public void setContentView(int layoutResID) {
-        super.setContentView(layoutResID);
-        ButterKnife.bind(this);
-        setBaseMediaPresenter(new BaseMediaPresenter(this));
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_full_player);
+        setPresenter(new FullPlayerPresenter(this));
+        mFullPlayerPresenter.start();
+    }
+
+    @Override
+    public void setPresenter(FullPlayerContract.Presenter presenter) {
+        mFullPlayerPresenter = presenter;
     }
 
     @Override
     public void start() {
-        showControl(false);
+        ButterKnife.bind(this);
         setPlayPauseIcon(mIsPlay);
         registerBroadcast();
         getAudioState();
         mPlayPre.setOnClickListener(this);
         mPlayPause.setOnClickListener(this);
         mPlayNext.setOnClickListener(this);
-        mRelativeControl.setOnClickListener(this);
-    }
-
-    @Override
-    public void setBaseMediaPresenter(BaseMediaContract.Presenter presenter) {
-        mBaseMediaPresenter = presenter;
-    }
-
-    @Override
-    public void showControl(boolean show) {
-        mRelativeControl.setVisibility(show ? View.VISIBLE : View.GONE);
+        mSeekBarAudio.setOnSeekBarChangeListener(this);
     }
 
     @Override
@@ -115,13 +122,14 @@ public abstract class BaseMediaActivity extends AppCompatActivity implements Bas
         mAudioTitle = intent.getExtras().getString(EXTRA_TITLE);
         mUserName = intent.getExtras().getString(EXTRA_USER_NAME);
         mImageUrl = intent.getExtras().getString(EXTRA_IMAGE_URL);
+        loadSeekBarInfor(intent);
         setPlayPauseIcon(intent.getExtras().getBoolean(EXTRA_ICON_PLAY_PAUSE));
         if (mAudioTitle != null) mTitle.setText(mAudioTitle);
         if (mUserName != null) mArtist.setText(mUserName);
-        if (mImageUrl != null)
-            Picasso.with(getApplicationContext()).load(mImageUrl).into(mImageArt);
-        else mImageArt.setImageResource(R.drawable.ic_audio_default);
-        showControl(true);
+        Picasso.with(getApplicationContext())
+            .load(mImageUrl)
+            .placeholder(R.drawable.ic_audio_default_large)
+            .into(mImageArt);
     }
 
     @Override
@@ -129,6 +137,45 @@ public abstract class BaseMediaActivity extends AppCompatActivity implements Bas
         mPlayPause.setImageResource(
             play ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
         mIsPlay = play;
+    }
+
+    @Override
+    public void getAudioState() {
+        Intent intent = new Intent(getApplicationContext(), MediaPlayerService.class);
+        intent.setAction(ACTION_GET_AUDIO_STATE);
+        startService(intent);
+    }
+
+    @Override
+    public void loadSeekBarInfor(Intent intent) {
+        mDuration = intent.getExtras().getInt(EXTRA_DURATION);
+        mFullDuration = intent.getExtras().getInt(EXTRA_FULL_DURATION);
+        mFullPlayerPresenter.updateSeekBar(mDuration, mFullDuration);
+    }
+
+    @Override
+    public void setSeekBar(int progressPercentage, String duration, String fullDuration) {
+        mSeekBarAudio.setProgress(progressPercentage);
+        mAudioDuration.setText(duration);
+        mAudioFullDuration.setText(fullDuration);
+    }
+
+    @Override
+    public void startServiceUpdateAudio(int duration) {
+        Intent intent = new Intent(getApplicationContext(), MediaPlayerService.class);
+        intent.putExtra(EXTRA_DURATION, duration);
+        intent.setAction(ACTION_SEEK_TO);
+        startService(intent);
+    }
+
+    private void registerBroadcast() {
+        IntentFilter filterUpdate = new IntentFilter(BROADCAST_UPDATE_CONTROL);
+        filterUpdate.addAction(ACTION_UPDATE_AUDIO);
+        filterUpdate.addAction(ACTION_PAUSE);
+        filterUpdate.addAction(ACTION_PLAY);
+        filterUpdate.addAction(ACTION_STOP);
+        filterUpdate.addAction(ACTION_UPDATE_SEEK_BAR);
+        registerReceiver(mUpdateControl, filterUpdate);
     }
 
     @Override
@@ -143,9 +190,6 @@ public abstract class BaseMediaActivity extends AppCompatActivity implements Bas
             case R.id.image_play_next:
                 startMediaService(ACTION_NEXT);
                 break;
-            case R.id.controls_container:
-                startActivity(new Intent(this, FullPlayerActivity.class));
-                break;
             default:
                 break;
         }
@@ -157,31 +201,18 @@ public abstract class BaseMediaActivity extends AppCompatActivity implements Bas
         getApplicationContext().startService(intent);
     }
 
-    protected boolean isMediaServiceRunning(Class<MediaPlayerService> serviceClass) {
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager
-            .getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int percentage, boolean fromUser) {
+        if (!fromUser) return;
+        mFullPlayerPresenter.updateAudio(percentage, mFullDuration);
     }
 
-    private void registerBroadcast() {
-        IntentFilter filterUpdate = new IntentFilter(BROADCAST_UPDATE_CONTROL);
-        filterUpdate.addAction(ACTION_UPDATE_AUDIO);
-        filterUpdate.addAction(ACTION_PAUSE);
-        filterUpdate.addAction(ACTION_PLAY);
-        filterUpdate.addAction(ACTION_STOP);
-        registerReceiver(mUpdateControl, filterUpdate);
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
     }
 
-    private void getAudioState() {
-        if (!isMediaServiceRunning(MediaPlayerService.class)) return;
-        Intent intent = new Intent(getApplicationContext(), MediaPlayerService.class);
-        intent.setAction(ACTION_GET_AUDIO_STATE);
-        startService(intent);
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
     }
 
     @Override

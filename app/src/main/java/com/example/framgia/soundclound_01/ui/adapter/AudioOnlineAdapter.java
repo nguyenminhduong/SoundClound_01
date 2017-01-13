@@ -80,6 +80,7 @@ public class AudioOnlineAdapter
             mPlaybackCount.setText(String.format(FORMAT_NUMBER, track.getPlaybackCount()));
             Picasso.with(mContext)
                 .load(track.getArtworkUrl())
+                .placeholder(R.drawable.ic_audio_default)
                 .into(mImageAudioIcon);
             mButtonDownload.setOnClickListener(new View.OnClickListener() {
                 @Override
